@@ -1,5 +1,6 @@
 package br.com.btsoftware.algamoney.api.model;
 
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -9,16 +10,22 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 @Entity
-@Table(name = "categories")
-public class Category {
+@Table(name = "people")
+public class Person {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@NotNull
-	@Size(min = 3, max = 50)
+	@Size(min = 3, max = 100)
 	private String name;
+
+	@Embedded
+	private Address address;
+
+	@NotNull
+	private Boolean status;
 
 	public Long getId() {
 		return id;
@@ -34,6 +41,22 @@ public class Category {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Address getAddress() {
+		return address;
+	}
+
+	public void setAddress(Address address) {
+		this.address = address;
+	}
+
+	public Boolean getStatus() {
+		return status;
+	}
+
+	public void setStatus(Boolean status) {
+		this.status = status;
 	}
 
 	@Override
@@ -52,7 +75,7 @@ public class Category {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Category other = (Category) obj;
+		Person other = (Person) obj;
 		if (id == null) {
 			if (other.id != null)
 				return false;

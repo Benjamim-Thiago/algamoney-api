@@ -1,21 +1,24 @@
 package br.com.btsoftware.algamoney.api.resource;
 
-import java.net.URI;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import br.com.btsoftware.algamoney.api.event.EventCreatedResource;
 import br.com.btsoftware.algamoney.api.model.Person;
 import br.com.btsoftware.algamoney.api.repository.PersonRepository;
 
@@ -25,6 +28,9 @@ public class PersonResource {
 
 	@Autowired
 	private PersonRepository personRepository;
+
+	@Autowired
+	private ApplicationEventPublisher publisher;
 
 	@GetMapping
 	public List<Person> list() {
@@ -36,17 +42,22 @@ public class PersonResource {
 	@PostMapping
 	public ResponseEntity<Person> create(@Valid @RequestBody Person person, HttpServletResponse response) {
 		Person personSave = personRepository.save(person);
-		URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri().path("/{id}").buildAndExpand(personSave.getId())
-				.toUri();
-		response.setHeader("Location", uri.toASCIIString());
-		
-		return ResponseEntity.created(uri).body(personSave);
+
+		publisher.publishEvent(new EventCreatedResource(this, response, personSave.getId()));
+
+		return ResponseEntity.status(HttpStatus.CREATED).body(personSave);
 	}
-	
+
 	@GetMapping("/{id}")
 	public ResponseEntity<Person> findById(@PathVariable Long id) {
 		Person person = personRepository.findOne(id);
 		return person != null ? ResponseEntity.ok(person) : ResponseEntity.notFound().build();
+	}
+
+	@DeleteMapping("/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void remover(@PathVariable Long id) {
+		this.personRepository.delete(id);
 	}
 
 }

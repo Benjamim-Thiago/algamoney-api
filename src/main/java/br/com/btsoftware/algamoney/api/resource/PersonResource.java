@@ -13,14 +13,17 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.btsoftware.algamoney.api.dto.PersonUpdateStatusDTO;
 import br.com.btsoftware.algamoney.api.event.EventCreatedResource;
 import br.com.btsoftware.algamoney.api.model.Person;
 import br.com.btsoftware.algamoney.api.repository.PersonRepository;
+import br.com.btsoftware.algamoney.api.service.PersonService;
 
 @RestController
 @RequestMapping("/people")
@@ -31,6 +34,9 @@ public class PersonResource {
 
 	@Autowired
 	private ApplicationEventPublisher publisher;
+
+	@Autowired
+	private PersonService personService;
 
 	@GetMapping
 	public List<Person> list() {
@@ -48,6 +54,12 @@ public class PersonResource {
 		return ResponseEntity.status(HttpStatus.CREATED).body(personSave);
 	}
 
+	@PutMapping("/{id}")
+	public ResponseEntity<Person> update(@PathVariable Long id, @Valid @RequestBody Person person) {
+		Person personSaved = personService.update(id, person);
+		return ResponseEntity.ok(personSaved);
+	}
+
 	@GetMapping("/{id}")
 	public ResponseEntity<Person> findById(@PathVariable Long id) {
 		Person person = personRepository.findOne(id);
@@ -58,6 +70,12 @@ public class PersonResource {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void remover(@PathVariable Long id) {
 		this.personRepository.delete(id);
+	}
+	
+	@PutMapping("/{id}/status")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void updateStatusPropertie(@PathVariable Long id, @RequestBody PersonUpdateStatusDTO personUpdateStatusDTO) {
+		personService.updateStatusPropertie(id, personUpdateStatusDTO.getStatus());
 	}
 
 }

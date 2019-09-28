@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "postings")
@@ -22,8 +23,10 @@ public class Posting {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@NotNull
 	private String description;
 
+	@NotNull
 	@Column(name = "expiration_date")
 	private LocalDate expirationDate;
 
@@ -34,13 +37,16 @@ public class Posting {
 
 	private String comments;
 
+	@NotNull
 	@Enumerated(EnumType.STRING)
 	private TypePosting type;
 
+	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "category_id")
 	private Category category;
 
+	@NotNull
 	@ManyToOne
 	@JoinColumn(name = "person_id")
 	private Person person;

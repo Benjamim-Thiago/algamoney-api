@@ -22,7 +22,7 @@ public class PersonService {
 
 	}
 
-	private Person findPersonById(Long id) {
+	public Person findPersonById(Long id) {
 		Person personFind = personRepository.findOne(id);
 
 		if (personFind == null) {

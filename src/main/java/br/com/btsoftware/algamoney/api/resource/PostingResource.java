@@ -24,6 +24,7 @@ import br.com.btsoftware.algamoney.api.event.EventCreatedResource;
 import br.com.btsoftware.algamoney.api.exceptionhandler.AlgamoneyExceptionHandler.Error;
 import br.com.btsoftware.algamoney.api.model.Posting;
 import br.com.btsoftware.algamoney.api.repository.PostingRepository;
+import br.com.btsoftware.algamoney.api.repository.filter.PostingFilter;
 import br.com.btsoftware.algamoney.api.service.PostingService;
 import br.com.btsoftware.algamoney.api.service.exception.PersonInexistOrInactiveException;
 
@@ -43,8 +44,8 @@ public class PostingResource {
 	private MessageSource messageSource;
 	
 	@GetMapping
-	public List<Posting> list() {
-		List<Posting> postings = postingRepository.findAll();
+	public List<Posting> list(PostingFilter postongFilter) {
+		List<Posting> postings = postingRepository.filter(postongFilter);
 
 		return postings;
 	}

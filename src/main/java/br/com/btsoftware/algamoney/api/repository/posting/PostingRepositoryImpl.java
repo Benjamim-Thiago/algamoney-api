@@ -8,13 +8,16 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.criteria.Predicate;
-
 import br.com.btsoftware.algamoney.api.model.Posting;
+import br.com.btsoftware.algamoney.api.model.Posting_;
 import br.com.btsoftware.algamoney.api.repository.filter.PostingFilter;
 
 public class PostingRepositoryImpl implements PostingRepositoryQuery {
@@ -23,7 +26,7 @@ public class PostingRepositoryImpl implements PostingRepositoryQuery {
 	private EntityManager manager;
 
 	@Override
-	public List<Posting> filter(PostingFilter postingFilter) {
+	public Page<Posting> filter(PostingFilter postingFilter, Pageable pageable) {
 		CriteriaBuilder builder = manager.getCriteriaBuilder();
 		CriteriaQuery<Posting> criteria = builder.createQuery(Posting.class);
 		Root<Posting> root = criteria.from(Posting.class);
@@ -33,34 +36,46 @@ public class PostingRepositoryImpl implements PostingRepositoryQuery {
 		criteria.where(predicates);
 
 		TypedQuery<Posting> query = manager.createQuery(criteria);
-		return query.getResultList();
+		addPaginateConstraint(query, pageable);
+		return new PageImpl<>(query.getResultList(), pageable, total(postingFilter));
 	}
 
 	private Predicate[] createConstraints(PostingFilter postingFilter, CriteriaBuilder builder, Root<Posting> root) {
 		List<Predicate> predicates = new ArrayList<>();
 
-		/*
-		 * OBS Certificar se em Propriedades do projeto está criado Java Compiler > Annotation Processing
-		 * Em Generate source directory: src/main/java
-		 * Depois em Java Compiler > Annotation Processing factory path => adicionar o jar do jpamodelgen
-		 * => No pom.xml
-		 * <dependency>
-		 *	<groupId>org.hibernate</groupId>
-		 *	<artifactId>hibernate-jpamodelgen</artifactId>
-		 *	</dependency>
-		 */
-		
 		if (!StringUtils.isEmpty(postingFilter.getDescription())) {
-			predicates.add(builder.like(
-					builder.lower(root.get("description")), "%" + postingFilter.getDescription().toLowerCase() + "%"));
+			predicates.add(builder.like(builder.lower(root.get(Posting_.description)),
+					"%" + postingFilter.getDescription().toLowerCase() + "%"));
 		}
 		if (postingFilter.getFirstDate() != null) {
-
+			predicates
+					.add(builder.greaterThanOrEqualTo(root.get(Posting_.expirationDate), postingFilter.getFirstDate()));
 		}
 		if (postingFilter.getLastDate() != null) {
-
+			predicates.add(builder.lessThanOrEqualTo(root.get(Posting_.expirationDate), postingFilter.getLastDate()));
 		}
 		return predicates.toArray(new Predicate[predicates.size()]);
 	}
 
+	private void addPaginateConstraint(TypedQuery<Posting> query, Pageable pageable) {
+		int currentPage = pageable.getPageNumber();
+		int totalRecordsPerPage = pageable.getPageSize();
+		int firstRecordOfPage = currentPage * totalRecordsPerPage;
+
+		query.setFirstResult(firstRecordOfPage);
+		query.setMaxResults(totalRecordsPerPage);
+	}
+
+	private Long total(PostingFilter postingFilter) {
+		CriteriaBuilder builder = manager.getCriteriaBuilder();
+		CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
+		Root<Posting> root = criteria.from(Posting.class);
+
+		Predicate[] predicates = createConstraints(postingFilter, builder, root);
+		criteria.where(predicates);
+		
+		criteria.select(builder.count(root));
+		return manager.createQuery(criteria).getSingleResult();
+		
+	}
 }

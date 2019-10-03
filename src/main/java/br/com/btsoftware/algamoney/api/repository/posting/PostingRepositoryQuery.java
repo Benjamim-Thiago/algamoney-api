@@ -1,10 +1,11 @@
 package br.com.btsoftware.algamoney.api.repository.posting;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import br.com.btsoftware.algamoney.api.model.Posting;
 import br.com.btsoftware.algamoney.api.repository.filter.PostingFilter;
 
 public interface PostingRepositoryQuery {
-	public List<Posting> filter(PostingFilter postingFilter);
+	public Page<Posting> filter(PostingFilter postingFilter, Pageable pageable);
 }

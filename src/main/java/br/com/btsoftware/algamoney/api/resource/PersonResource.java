@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,6 +40,7 @@ public class PersonResource {
 	private PersonService personService;
 
 	@GetMapping
+	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_PESSOA') and #oauth2.hasScope('read')")
 	public List<Person> list() {
 		List<Person> people = personRepository.findAll();
 
@@ -46,6 +48,7 @@ public class PersonResource {
 	}
 
 	@PostMapping
+	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_PESSOA') and #oauth2.hasScope('write')")
 	public ResponseEntity<Person> create(@Valid @RequestBody Person person, HttpServletResponse response) {
 		Person personSave = personRepository.save(person);
 
@@ -55,12 +58,14 @@ public class PersonResource {
 	}
 
 	@PutMapping("/{id}")
+	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_PESSOA') and #oauth2.hasScope('write')")
 	public ResponseEntity<Person> update(@PathVariable Long id, @Valid @RequestBody Person person) {
 		Person personSaved = personService.update(id, person);
 		return ResponseEntity.ok(personSaved);
 	}
 
 	@GetMapping("/{id}")
+	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_PESSOA') and #oauth2.hasScope('read')")
 	public ResponseEntity<Person> findById(@PathVariable Long id) {
 		Person person = personRepository.findOne(id);
 		return person != null ? ResponseEntity.ok(person) : ResponseEntity.notFound().build();
@@ -68,12 +73,14 @@ public class PersonResource {
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@PreAuthorize("hasAuthority('ROLE_REMOVER_PESSOA') and #oauth2.hasScope('write')")
 	public void remover(@PathVariable Long id) {
 		this.personRepository.delete(id);
 	}
 	
 	@PutMapping("/{id}/status")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_PESSOA') and #oauth2.hasScope('write')")
 	public void updateStatusPropertie(@PathVariable Long id, @RequestBody PersonUpdateStatusDTO personUpdateStatusDTO) {
 		personService.updateStatusPropertie(id, personUpdateStatusDTO.getStatus());
 	}

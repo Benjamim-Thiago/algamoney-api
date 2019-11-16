@@ -16,9 +16,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 
+import br.com.btsoftware.algamoney.api.model.Category_;
+import br.com.btsoftware.algamoney.api.model.Person_;
 import br.com.btsoftware.algamoney.api.model.Posting;
 import br.com.btsoftware.algamoney.api.model.Posting_;
 import br.com.btsoftware.algamoney.api.repository.filter.PostingFilter;
+import br.com.btsoftware.algamoney.api.repository.projection.PostingSummary;
 
 public class PostingRepositoryImpl implements PostingRepositoryQuery {
 
@@ -40,6 +43,30 @@ public class PostingRepositoryImpl implements PostingRepositoryQuery {
 		return new PageImpl<>(query.getResultList(), pageable, total(postingFilter));
 	}
 
+	@Override
+	public Page<PostingSummary> summarize(PostingFilter postingFilter, Pageable pageable) {
+		CriteriaBuilder builder = manager.getCriteriaBuilder();
+		CriteriaQuery<PostingSummary> criteria = builder.createQuery(PostingSummary.class);
+		Root<Posting> root = criteria.from(Posting.class);
+
+		criteria.select(builder.construct(PostingSummary.class
+				, root.get(Posting_.id)
+				, root.get(Posting_.description)
+				, root.get(Posting_.expirationDate)
+				, root.get(Posting_.paymentDate)
+				, root.get(Posting_.value)
+				, root.get(Posting_.type)
+				, root.get(Posting_.category).get(Category_.name)
+				, root.get(Posting_.person).get(Person_.name)));
+
+		Predicate[] predicates = createConstraints(postingFilter, builder, root);
+		criteria.where(predicates);
+
+		TypedQuery<PostingSummary> query = manager.createQuery(criteria);
+		addPaginateConstraint(query, pageable);
+		return new PageImpl<>(query.getResultList(), pageable, total(postingFilter));
+	}
+
 	private Predicate[] createConstraints(PostingFilter postingFilter, CriteriaBuilder builder, Root<Posting> root) {
 		List<Predicate> predicates = new ArrayList<>();
 
@@ -57,7 +84,7 @@ public class PostingRepositoryImpl implements PostingRepositoryQuery {
 		return predicates.toArray(new Predicate[predicates.size()]);
 	}
 
-	private void addPaginateConstraint(TypedQuery<Posting> query, Pageable pageable) {
+	private void addPaginateConstraint(TypedQuery<?> query, Pageable pageable) {
 		int currentPage = pageable.getPageNumber();
 		int totalRecordsPerPage = pageable.getPageSize();
 		int firstRecordOfPage = currentPage * totalRecordsPerPage;
@@ -73,9 +100,9 @@ public class PostingRepositoryImpl implements PostingRepositoryQuery {
 
 		Predicate[] predicates = createConstraints(postingFilter, builder, root);
 		criteria.where(predicates);
-		
+
 		criteria.select(builder.count(root));
 		return manager.createQuery(criteria).getSingleResult();
-		
+
 	}
 }

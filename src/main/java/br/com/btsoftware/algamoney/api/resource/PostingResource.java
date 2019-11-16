@@ -30,6 +30,7 @@ import br.com.btsoftware.algamoney.api.exceptionhandler.AlgamoneyExceptionHandle
 import br.com.btsoftware.algamoney.api.model.Posting;
 import br.com.btsoftware.algamoney.api.repository.PostingRepository;
 import br.com.btsoftware.algamoney.api.repository.filter.PostingFilter;
+import br.com.btsoftware.algamoney.api.repository.projection.PostingSummary;
 import br.com.btsoftware.algamoney.api.service.PostingService;
 import br.com.btsoftware.algamoney.api.service.exception.PersonInexistOrInactiveException;
 
@@ -52,6 +53,14 @@ public class PostingResource {
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO') and #oauth2.hasScope('read')")
 	public Page<Posting> list(PostingFilter postongFilter, Pageable pageable) {
 		Page<Posting> postings = postingRepository.filter(postongFilter, pageable);
+
+		return postings;
+	}
+
+	@GetMapping(params = "summary")
+	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO') and #oauth2.hasScope('read')")
+	public Page<PostingSummary> summarize(PostingFilter postongFilter, Pageable pageable) {
+		Page<PostingSummary> postings = postingRepository.summarize(postongFilter, pageable);
 
 		return postings;
 	}

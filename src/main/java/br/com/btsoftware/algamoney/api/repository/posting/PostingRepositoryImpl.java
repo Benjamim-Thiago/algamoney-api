@@ -33,10 +33,13 @@ public class PostingRepositoryImpl implements PostingRepositoryQuery {
 		CriteriaBuilder builder = manager.getCriteriaBuilder();
 		CriteriaQuery<Posting> criteria = builder.createQuery(Posting.class);
 		Root<Posting> root = criteria.from(Posting.class);
+		
 
 		// criar as restrições
 		Predicate[] predicates = createConstraints(postingFilter, builder, root);
 		criteria.where(predicates);
+		//Ordena os itens
+		criteria.orderBy(builder.desc(root.get(Posting_.id)));
 
 		TypedQuery<Posting> query = manager.createQuery(criteria);
 		addPaginateConstraint(query, pageable);
@@ -48,7 +51,7 @@ public class PostingRepositoryImpl implements PostingRepositoryQuery {
 		CriteriaBuilder builder = manager.getCriteriaBuilder();
 		CriteriaQuery<PostingSummary> criteria = builder.createQuery(PostingSummary.class);
 		Root<Posting> root = criteria.from(Posting.class);
-
+		
 		criteria.select(builder.construct(PostingSummary.class
 				, root.get(Posting_.id)
 				, root.get(Posting_.description)
@@ -59,9 +62,13 @@ public class PostingRepositoryImpl implements PostingRepositoryQuery {
 				, root.get(Posting_.category).get(Category_.name)
 				, root.get(Posting_.person).get(Person_.name)));
 
+
 		Predicate[] predicates = createConstraints(postingFilter, builder, root);
 		criteria.where(predicates);
-
+		
+		//Ordena os itens
+		criteria.orderBy(builder.desc(root.get(Posting_.id)));
+		
 		TypedQuery<PostingSummary> query = manager.createQuery(criteria);
 		addPaginateConstraint(query, pageable);
 		return new PageImpl<>(query.getResultList(), pageable, total(postingFilter));
@@ -81,6 +88,7 @@ public class PostingRepositoryImpl implements PostingRepositoryQuery {
 		if (postingFilter.getLastDate() != null) {
 			predicates.add(builder.lessThanOrEqualTo(root.get(Posting_.expirationDate), postingFilter.getLastDate()));
 		}
+		
 		return predicates.toArray(new Predicate[predicates.size()]);
 	}
 
@@ -97,7 +105,7 @@ public class PostingRepositoryImpl implements PostingRepositoryQuery {
 		CriteriaBuilder builder = manager.getCriteriaBuilder();
 		CriteriaQuery<Long> criteria = builder.createQuery(Long.class);
 		Root<Posting> root = criteria.from(Posting.class);
-
+				
 		Predicate[] predicates = createConstraints(postingFilter, builder, root);
 		criteria.where(predicates);
 

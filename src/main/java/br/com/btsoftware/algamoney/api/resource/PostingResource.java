@@ -1,5 +1,6 @@
 package br.com.btsoftware.algamoney.api.resource;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.btsoftware.algamoney.api.dto.PostingStatisticCategoryDTO;
+import br.com.btsoftware.algamoney.api.dto.PostingStatisticDayDTO;
 import br.com.btsoftware.algamoney.api.event.EventCreatedResource;
 import br.com.btsoftware.algamoney.api.exceptionhandler.AlgamoneyExceptionHandler.Error;
 import br.com.btsoftware.algamoney.api.model.Posting;
@@ -49,11 +52,23 @@ public class PostingResource {
 
 	@Autowired
 	private MessageSource messageSource;
-
+	
+	@GetMapping("/statistic/per-day")
+	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO') and #oauth2.hasScope('read')")
+	public List<PostingStatisticDayDTO> listPerDay() {
+		return postingRepository.perDay(LocalDate.now());
+	}
+	
+	@GetMapping("/statistic/per-category")
+	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO') and #oauth2.hasScope('read')")
+	public List<PostingStatisticCategoryDTO> listPerCategory() {
+		return postingRepository.perCategory(LocalDate.now());
+	}
+	
 	@GetMapping
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO') and #oauth2.hasScope('read')")
-	public Page<Posting> list(PostingFilter postongFilter, Pageable pageable) {
-		Page<Posting> postings = postingRepository.filter(postongFilter, pageable);
+	public Page<Posting> list(PostingFilter postingFilter, Pageable pageable) {
+		Page<Posting> postings = postingRepository.filter(postingFilter, pageable);
 
 		return postings;
 	}

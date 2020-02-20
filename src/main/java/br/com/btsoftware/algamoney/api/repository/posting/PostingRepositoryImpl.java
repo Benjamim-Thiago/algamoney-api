@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 
 import br.com.btsoftware.algamoney.api.dto.PostingStatisticCategoryDTO;
 import br.com.btsoftware.algamoney.api.dto.PostingStatisticDayDTO;
+import br.com.btsoftware.algamoney.api.dto.PostingStatisticPersonDTO;
 import br.com.btsoftware.algamoney.api.model.Category_;
 import br.com.btsoftware.algamoney.api.model.Person_;
 import br.com.btsoftware.algamoney.api.model.Posting;
@@ -31,6 +32,34 @@ public class PostingRepositoryImpl implements PostingRepositoryQuery {
 	@PersistenceContext
 	private EntityManager manager;
 
+	@Override
+	public List<PostingStatisticPersonDTO> perPerson(LocalDate firstDate, LocalDate lastDate) {
+		CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
+		
+		CriteriaQuery<PostingStatisticPersonDTO> criteriaQuery = criteriaBuilder.
+				createQuery(PostingStatisticPersonDTO.class);
+		
+		Root<Posting> root =  criteriaQuery.from(Posting.class);
+		
+		criteriaQuery.select(criteriaBuilder.construct(PostingStatisticPersonDTO.class, 
+				root.get(Posting_.type),
+				root.get(Posting_.person),
+				criteriaBuilder.sum(root.get(Posting_.value))));
+						
+		criteriaQuery.where(
+				criteriaBuilder.greaterThanOrEqualTo(root.get(Posting_.expirationDate), 
+						firstDate),
+				criteriaBuilder.lessThanOrEqualTo(root.get(Posting_.expirationDate), 
+						lastDate));
+		
+		criteriaQuery.groupBy(root.get(Posting_.type), root.get(Posting_.person));
+		
+		TypedQuery<PostingStatisticPersonDTO> typedQuery = manager
+				.createQuery(criteriaQuery);
+		
+		return typedQuery.getResultList();
+	}
+	
 	@Override
 	public List<PostingStatisticDayDTO> perDay(LocalDate monthReference) {
 		CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();

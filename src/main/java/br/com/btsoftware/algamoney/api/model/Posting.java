@@ -15,6 +15,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "postings")
 public class Posting {
@@ -51,6 +53,11 @@ public class Posting {
 	@JoinColumn(name = "person_id")
 	private Person person;
 
+	@JsonIgnore
+	public boolean isReceita() {
+		return TypePosting.RECEITA.equals(this.type);
+	}
+	
 	public Long getId() {
 		return id;
 	}

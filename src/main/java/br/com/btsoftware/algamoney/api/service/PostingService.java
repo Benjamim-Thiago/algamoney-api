@@ -10,13 +10,17 @@ import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import br.com.btsoftware.algamoney.api.dto.PostingStatisticPersonDTO;
+import br.com.btsoftware.algamoney.api.mail.Mailer;
 import br.com.btsoftware.algamoney.api.model.Person;
 import br.com.btsoftware.algamoney.api.model.Posting;
+import br.com.btsoftware.algamoney.api.model.User;
 import br.com.btsoftware.algamoney.api.repository.PersonRepository;
 import br.com.btsoftware.algamoney.api.repository.PostingRepository;
+import br.com.btsoftware.algamoney.api.repository.UserRepository;
 import br.com.btsoftware.algamoney.api.service.exception.PersonInexistOrInactiveException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -26,13 +30,30 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 @Service
 public class PostingService {
-
+	
+	private static final String DESTINATARIOS = "ROLE_PESQUISAR_LANCAMENTO";
+	
 	@Autowired
 	private PersonRepository personRepository;
 
 	@Autowired
 	private PostingRepository postingRepository;
+	
+	@Autowired
+	private UserRepository userRepository;	
+	
+	@Autowired
+	private Mailer mailer;
 
+	@Scheduled(cron = "0 51 12 * * *")
+	public void notifiesExpiredPosting() {
+		List<Posting> expired = postingRepository.findByExpirationDateLessThanEqualAndPaymentDateIsNull(LocalDate.now());
+		
+		List<User> recipients = userRepository.findByPermissionsDescription(DESTINATARIOS);
+		
+		mailer.notifiesExpiredPosting(expired, recipients);
+	}
+	
 	public byte[] reportPerPerson(LocalDate firstDate, LocalDate lastDate) throws JRException {
 		List<PostingStatisticPersonDTO> data = postingRepository.perPerson(firstDate, lastDate);
 		

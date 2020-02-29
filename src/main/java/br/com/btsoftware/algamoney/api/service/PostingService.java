@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -33,6 +35,8 @@ public class PostingService {
 	
 	private static final String DESTINATARIOS = "ROLE_PESQUISAR_LANCAMENTO";
 	
+	private static final Logger logger = LoggerFactory.getLogger(PostingService.class); 
+	
 	@Autowired
 	private PersonRepository personRepository;
 
@@ -45,13 +49,37 @@ public class PostingService {
 	@Autowired
 	private Mailer mailer;
 
-	@Scheduled(cron = "0 51 12 * * *")
+	@Scheduled(cron = "0 41 09 * * *")
 	public void notifiesExpiredPosting() {
+		
+		if (logger.isDebugEnabled()) {
+			logger.debug("Preparando envio de "
+					+ "e-mails de aviso de lançamentos vencidos.");
+		}
+		
 		List<Posting> expired = postingRepository.findByExpirationDateLessThanEqualAndPaymentDateIsNull(LocalDate.now());
+		
+		if (expired.isEmpty()) {
+			logger.info("Sem lançamentos vencidos para aviso.");
+			
+			return;
+		}
+		
+		logger.info("Exitem {} lançamentos vencidos.", expired.size());
 		
 		List<User> recipients = userRepository.findByPermissionsDescription(DESTINATARIOS);
 		
+		
+		if (recipients.isEmpty()) {
+			logger.warn("Existem lançamentos vencidos, mas o "
+					+ "sistema não encontrou destinatários.");
+			
+			return;
+		}
+		
 		mailer.notifiesExpiredPosting(expired, recipients);
+		
+		logger.info("Envio de e-mail de aviso concluído.");
 	}
 	
 	public byte[] reportPerPerson(LocalDate firstDate, LocalDate lastDate) throws JRException {

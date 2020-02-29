@@ -14,10 +14,19 @@ public class PersonService {
 	@Autowired
 	private PersonRepository personRepository;
 
+	public Person save(Person person) {
+		person.getContacts().forEach(c -> c.setPerson(person));
+		return personRepository.save(person);
+	}
+
 	public Person update(Long id, Person person) {
 		Person personFind = findPersonById(id);
-
-		BeanUtils.copyProperties(person, personFind, "id");
+		
+		personFind.getContacts().clear();
+		personFind.getContacts().addAll(person.getContacts());
+		personFind.getContacts().forEach(c -> c.setPerson(personFind));
+		
+		BeanUtils.copyProperties(person, personFind, "id", "contacts");
 		return personRepository.save(personFind);
 
 	}
@@ -35,7 +44,7 @@ public class PersonService {
 	public void updateStatusPropertie(Long id, Boolean status) {
 		Person personSalved = findPersonById(id);
 		personSalved.setStatus(status);
-		
+
 		personRepository.save(personSalved);
 	}
 }

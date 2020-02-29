@@ -1,16 +1,22 @@
 package br.com.btsoftware.algamoney.api.model;
 
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "people")
@@ -29,6 +35,11 @@ public class Person {
 
 	@NotNull
 	private Boolean status;
+
+	@JsonIgnoreProperties("person")
+	@Valid
+	@OneToMany(mappedBy = "person", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Contact> contacts;
 
 	public Long getId() {
 		return id;
@@ -61,7 +72,15 @@ public class Person {
 	public void setStatus(Boolean status) {
 		this.status = status;
 	}
-	
+
+	public List<Contact> getContacts() {
+		return contacts;
+	}
+
+	public void setContacts(List<Contact> contact) {
+		this.contacts = contact;
+	}
+
 	@JsonIgnore
 	@Transient
 	public Boolean isInactive() {

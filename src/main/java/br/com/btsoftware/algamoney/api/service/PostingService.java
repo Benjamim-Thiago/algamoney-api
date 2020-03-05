@@ -14,6 +14,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import br.com.btsoftware.algamoney.api.dto.PostingStatisticPersonDTO;
 import br.com.btsoftware.algamoney.api.mail.Mailer;
@@ -24,6 +25,7 @@ import br.com.btsoftware.algamoney.api.repository.PersonRepository;
 import br.com.btsoftware.algamoney.api.repository.PostingRepository;
 import br.com.btsoftware.algamoney.api.repository.UserRepository;
 import br.com.btsoftware.algamoney.api.service.exception.PersonInexistOrInactiveException;
+import br.com.btsoftware.algamoney.api.storage.S3;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -48,6 +50,9 @@ public class PostingService {
 	
 	@Autowired
 	private Mailer mailer;
+	
+	@Autowired
+	private S3 s3;
 
 	@Scheduled(cron = "0 41 09 * * *")
 	public void notifiesExpiredPosting() {
@@ -105,6 +110,10 @@ public class PostingService {
 			throw new PersonInexistOrInactiveException();
 		}
 
+		if (StringUtils.hasText(posting.getAnexo())) {
+			s3.save(posting.getAnexo());
+		}
+		
 		return postingRepository.save(posting);
 	}
 
@@ -113,6 +122,14 @@ public class PostingService {
 
 		if (!posting.getPerson().equals(postingSave.getPerson())) {
 			personValidate(posting);
+		}
+		
+		if (StringUtils.isEmpty(posting.getAnexo())
+				&& StringUtils.hasText(postingSave.getAnexo())) {
+			s3.remove(postingSave.getAnexo());
+		} else if (StringUtils.hasText(posting.getAnexo())
+				&& !posting.getAnexo().equals(postingSave.getAnexo())) {
+			s3.replace(postingSave.getAnexo(), posting.getAnexo());
 		}
 		
 		BeanUtils.copyProperties(posting, postingSave, "id");

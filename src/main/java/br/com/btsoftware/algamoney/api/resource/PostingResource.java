@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import br.com.btsoftware.algamoney.api.dto.Anexo;
 import br.com.btsoftware.algamoney.api.dto.PostingStatisticCategoryDTO;
 import br.com.btsoftware.algamoney.api.dto.PostingStatisticDayDTO;
 import br.com.btsoftware.algamoney.api.event.EventCreatedResource;
@@ -45,6 +46,7 @@ import br.com.btsoftware.algamoney.api.repository.filter.PostingFilter;
 import br.com.btsoftware.algamoney.api.repository.projection.PostingSummary;
 import br.com.btsoftware.algamoney.api.service.PostingService;
 import br.com.btsoftware.algamoney.api.service.exception.PersonInexistOrInactiveException;
+import br.com.btsoftware.algamoney.api.storage.S3;
 
 @RestController
 @RequestMapping("/postings")
@@ -61,14 +63,19 @@ public class PostingResource {
 	@Autowired
 	private MessageSource messageSource;
 	
+	@Autowired
+	private S3 s3; 
+	
 	@PostMapping("/anexo")
 	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO') and #oauth2.hasScope('write')")
-	public String uploadAnexo(@RequestParam MultipartFile anexo) throws IOException {
-		OutputStream out = new FileOutputStream(
+	public Anexo uploadAnexo(@RequestParam MultipartFile anexo) throws IOException {
+		/*OutputStream out = new FileOutputStream(
 				"/home/ben/Documentos/anexo--" + anexo.getOriginalFilename());
 		out.write(anexo.getBytes());
-		out.close();
-		return "ok";
+		out.close();*/
+		
+		String name = s3.salveTemporary(anexo);
+		return new Anexo(name, s3.generateUrl(name));
 	}
 	
 	@GetMapping("/reports/per-person")

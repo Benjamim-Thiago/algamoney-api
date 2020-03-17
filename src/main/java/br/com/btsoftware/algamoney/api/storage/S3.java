@@ -65,7 +65,8 @@ public class S3 {
 	}
 
 	public String generateUrl(String obj) {
-		return "\\\\" + property.getS3().getBucket() + ".s3.amazonaws.com/" + obj;
+		// return "\\\\" + property.getS3().getBucket() + ".s3.amazonaws.com/" + obj;
+		return "https://" + property.getS3().getBucket() + ".s3.amazonaws.com/" + obj;
 	}
 
 	public void save(String obj) {

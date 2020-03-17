@@ -1,6 +1,8 @@
 package br.com.btsoftware.algamoney.api.model;
 
 import javax.persistence.Embeddable;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
 @Embeddable
 public class Address {
@@ -10,8 +12,10 @@ public class Address {
 	private String complement;
 	private String neighborhood;
 	private String zipcode;
-	private String city;
-	private String state;
+
+	@ManyToOne
+	@JoinColumn(name = "city_id")
+	private City city;
 
 	public String getPlace() {
 		return place;
@@ -53,20 +57,12 @@ public class Address {
 		this.zipcode = zipcode;
 	}
 
-	public String getCity() {
+	public City getCity() {
 		return city;
 	}
 
-	public void setCity(String city) {
+	public void setCity(City city) {
 		this.city = city;
-	}
-
-	public String getState() {
-		return state;
-	}
-
-	public void setState(String state) {
-		this.state = state;
 	}
 
 }

@@ -1,5 +1,7 @@
 package br.com.btsoftware.algamoney.api.resource;
 
+import java.util.Optional;
+
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
@@ -60,15 +62,15 @@ public class PersonResource {
 	@GetMapping("/{id}")
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_PESSOA') and #oauth2.hasScope('read')")
 	public ResponseEntity<Person> findById(@PathVariable Long id) {
-		Person person = personRepository.findOne(id);
-		return person != null ? ResponseEntity.ok(person) : ResponseEntity.notFound().build();
+		Optional<Person> person = personRepository.findById(id);
+		return person.isPresent() ? ResponseEntity.ok(person.get()) : ResponseEntity.notFound().build();
 	}
 
 	@DeleteMapping("/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@PreAuthorize("hasAuthority('ROLE_REMOVER_PESSOA') and #oauth2.hasScope('write')")
 	public void remover(@PathVariable Long id) {
-		this.personRepository.delete(id);
+		this.personRepository.deleteById(id);
 	}
 
 	@PutMapping("/{id}/status")

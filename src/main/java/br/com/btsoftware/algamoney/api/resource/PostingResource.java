@@ -1,11 +1,10 @@
 package br.com.btsoftware.algamoney.api.resource;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -121,9 +120,9 @@ public class PostingResource {
 	@GetMapping("/{id}")
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO') and #oauth2.hasScope('read')")
 	public ResponseEntity<Posting> findById(@PathVariable Long id) {
-		Posting posting = postingRepository.findOne(id);
+		Optional<Posting> posting = postingRepository.findById(id);
 
-		return posting != null ? ResponseEntity.ok(posting) : ResponseEntity.notFound().build();
+		return posting.isPresent() ? ResponseEntity.ok(posting.get()) : ResponseEntity.notFound().build();
 	}
 
 	@PostMapping
@@ -151,7 +150,7 @@ public class PostingResource {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@PreAuthorize("hasAuthority('ROLE_REMOVER_LANCAMENTO') and #oauth2.hasScope('write')")
 	public void remover(@PathVariable Long id) {
-		this.postingRepository.delete(id);
+		this.postingRepository.deleteById(id);
 	}
 	
 	@PutMapping("/{id}")

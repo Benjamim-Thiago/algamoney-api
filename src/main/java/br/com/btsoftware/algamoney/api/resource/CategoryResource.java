@@ -1,6 +1,7 @@
 package br.com.btsoftware.algamoney.api.resource;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -52,8 +53,8 @@ public class CategoryResource {
 	@GetMapping("/{id}")
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_CATEGORIA') and #oauth2.hasScope('read')")
 	public ResponseEntity<Category> findById(@PathVariable Long id) {
-		Category category = categoryRepository.findOne(id);
-		return category != null ? ResponseEntity.ok(category) : ResponseEntity.notFound().build();
+		Optional<Category> category = categoryRepository.findById(id);
+		return category.isPresent() ? ResponseEntity.ok(category.get()) : ResponseEntity.notFound().build();
 	}
 
 }

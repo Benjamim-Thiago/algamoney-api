@@ -1,5 +1,7 @@
 package br.com.btsoftware.algamoney.api.service;
 
+import java.util.Optional;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -32,13 +34,13 @@ public class PersonService {
 	}
 
 	public Person findPersonById(Long id) {
-		Person personFind = personRepository.findOne(id);
+		Optional<Person> personFind = personRepository.findById(id);
 
-		if (personFind == null) {
+		if (!personFind.isPresent()) {
 			throw new EmptyResultDataAccessException(1);
 		}
 
-		return personFind;
+		return personFind.get();
 	}
 
 	public void updateStatusPropertie(Long id, Boolean status) {
